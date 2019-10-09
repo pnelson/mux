@@ -23,6 +23,7 @@ Use of this package gives you the following:
 - response buffer pool to eliminate partially rendered responses
 - request identifiers for instrumentation
 - locale detection for internationalization
+- export routes to static files
 
 Individual components of this package are customizable and/or replacable where
 possible. Application structure is not imposed. Defaults for a greenfield JSON

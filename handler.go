@@ -3,8 +3,10 @@ package mux
 import (
 	"bytes"
 	"errors"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"runtime/debug"
 
 	"golang.org/x/text/language"
@@ -176,6 +178,31 @@ func (h *Handler) Walk(fn WalkFunc) error {
 		return errors.New("mux: router is not a Walker")
 	}
 	return w.Walk(fn)
+}
+
+// Export walks the named routes and applies the exporter to the response body.
+// A nil exporter writes to the dist directory within the current working
+// directory. See FileSystemExporter documentation for more details.
+func (h *Handler) Export(exporter Exporter) error {
+	server := httptest.NewServer(h)
+	defer server.Close()
+	if exporter == nil {
+		exporter = FileSystemExporter("dist")
+	}
+	fn := func(r *Route) error {
+		route := r.Pattern()
+		resp, err := http.Get(server.URL + route)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return exporter.Export(r, b)
+	}
+	return h.Walk(fn)
 }
 
 // Query returns the first query value associated with the given key.

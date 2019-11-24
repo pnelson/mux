@@ -15,7 +15,6 @@ var requestContextKey interface{} = key(0)
 
 // requestContext represents the mux-specific request context.
 type requestContext struct {
-	id     string
 	route  *Route
 	params Params
 	locale language.Tag
@@ -29,12 +28,6 @@ func setContext(req *http.Request, rc *requestContext) *http.Request {
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, requestContextKey, rc)
 	return req.WithContext(ctx)
-}
-
-// RequestID returns the request identifier.
-func RequestID(req *http.Request) string {
-	rc := getContext(req)
-	return rc.id
 }
 
 // Match returns the matching route for the request, or nil if no match.

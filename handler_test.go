@@ -31,7 +31,7 @@ func testHandler(w http.ResponseWriter, req *http.Request) error {
 }
 
 func newTestRequest(method, path string, body io.Reader) *http.Request {
-	rc := &requestContext{id: "test"}
+	rc := &requestContext{}
 	req := httptest.NewRequest(method, path, body)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
@@ -104,7 +104,12 @@ func testPanic(t *testing.T, req *http.Request) {
 	server := httptest.NewServer(h)
 	defer server.Close()
 	client := server.Client()
-	resp, err := client.Get(server.URL)
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	req.Header.Set("X-Request-ID", "test")
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

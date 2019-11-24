@@ -20,7 +20,12 @@ func TestRequestID(t *testing.T) {
 	server := httptest.NewServer(h)
 	defer server.Close()
 	client := server.Client()
-	resp, err := client.Get(server.URL)
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	req.Header.Set("X-Request-ID", "test")
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

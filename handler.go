@@ -10,8 +10,6 @@ import (
 	"runtime/debug"
 
 	"golang.org/x/text/language"
-
-	"github.com/segmentio/ksuid"
 )
 
 // Handler is a http.Handler with application lifecycle helpers.
@@ -120,11 +118,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // init initializes a new request context.
 func (h *Handler) init(req *http.Request) *http.Request {
-	k := ksuid.New()
-	rc := &requestContext{
-		id:     k.String(),
-		locale: h.locale(req),
-	}
+	rc := &requestContext{locale: h.locale(req)}
 	return setContext(req, rc)
 }
 
@@ -210,6 +204,11 @@ func (h *Handler) Export(exporter Exporter) error {
 // empty string.
 func Query(req *http.Request, name string) string {
 	return req.URL.Query().Get(name)
+}
+
+// RequestID returns the request identifier from the X-Request-ID header.
+func RequestID(req *http.Request) string {
+	return req.Header.Get("X-Request-ID")
 }
 
 // defaultResolver represents the default resolver.

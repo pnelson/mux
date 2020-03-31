@@ -3,11 +3,13 @@ package mux
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"runtime/debug"
+	"sync/atomic"
 
 	"golang.org/x/text/language"
 )
@@ -118,7 +120,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // init initializes a new request context.
 func (h *Handler) init(req *http.Request) *http.Request {
-	rc := &requestContext{locale: h.locale(req)}
+	n := atomic.AddUint64(&seq, 1)
+	rc := &requestContext{seq: n, locale: h.locale(req)}
 	return setContext(req, rc)
 }
 
@@ -207,8 +210,14 @@ func Query(req *http.Request, name string) string {
 }
 
 // RequestID returns the request identifier from the X-Request-ID header.
+// The formatted request sequence number is returned if the header is not set.
 func RequestID(req *http.Request) string {
-	return req.Header.Get("X-Request-ID")
+	id := req.Header.Get("X-Request-ID")
+	if id == "" {
+		n := Sequence(req)
+		id = fmt.Sprintf("%d", n)
+	}
+	return id
 }
 
 // defaultResolver represents the default resolver.

@@ -13,8 +13,12 @@ type key int
 // requestContextKey represents the key holding the request context.
 var requestContextKey interface{} = key(0)
 
+// seq represents the request sequence number.
+var seq uint64
+
 // requestContext represents the mux-specific request context.
 type requestContext struct {
+	seq    uint64
 	route  *Route
 	params Params
 	locale language.Tag
@@ -34,6 +38,12 @@ func setContext(req *http.Request, rc *requestContext) *http.Request {
 func Match(req *http.Request) *Route {
 	rc := getContext(req)
 	return rc.route
+}
+
+// Sequence returns the request sequence number.
+func Sequence(req *http.Request) uint64 {
+	rc := getContext(req)
+	return rc.seq
 }
 
 // Locale returns the best match BCP 47 language tag

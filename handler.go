@@ -222,28 +222,12 @@ func RequestID(req *http.Request) string {
 
 // defaultResolver represents the default resolver.
 func defaultResolver(req *http.Request, code int, err error) Error {
-	view := defaultErrorView{
+	return defaultErrorView{
 		Code:      code,
 		Title:     http.StatusText(code),
+		Message:   ErrorText(code, err),
 		RequestID: RequestID(req),
 	}
-	if code == http.StatusInternalServerError {
-		view.Message = "An unexpected error has occurred."
-		return view
-	}
-	switch err {
-	case ErrDecodeContentType:
-		view.Message = "Invalid content-type header."
-	case ErrDecodeRequestData:
-		view.Message = "Invalid request data."
-	}
-	switch err.(type) {
-	case ErrMethodNotAllowed:
-		view.Message = "The method is not allowed for the requested URL."
-	case ValidationError:
-		view.Message = err.Error()
-	}
-	return view
 }
 
 // defaultLogger represents the default logger.

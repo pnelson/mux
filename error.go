@@ -71,6 +71,27 @@ func (h *Handler) Abort(w http.ResponseWriter, req *http.Request, err error) {
 	}
 }
 
+// ErrorText returns descriptions for mux errors.
+// The empty string is returned for unknown errors.
+func ErrorText(code int, err error) string {
+	if code == http.StatusInternalServerError {
+		return "An unexpected error has occurred."
+	}
+	switch err {
+	case ErrDecodeContentType:
+		return "Invalid content-type header."
+	case ErrDecodeRequestData:
+		return "Invalid request data."
+	}
+	switch err.(type) {
+	case ErrMethodNotAllowed:
+		return "The method is not allowed for the requested URL."
+	case ValidationError:
+		return err.Error()
+	}
+	return ""
+}
+
 // abort replies to the request with a plain text error message.
 func abort(w http.ResponseWriter, code int) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")

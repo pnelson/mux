@@ -12,7 +12,18 @@ type Error interface {
 }
 
 // Resolver represents the ability to resolve an error to a view.
-type Resolver func(req *http.Request, code int, err error) Error
+type Resolver interface {
+	Resolve(req *http.Request, code int, err error) Error
+}
+
+// ResolverFunc is an adapter to allow the use of
+// ordinary functions as Resolvers.
+type ResolverFunc func(req *http.Request, code int, err error) Error
+
+// Resolve implements the Resolver interface.
+func (fn ResolverFunc) Resolve(req *http.Request, code int, err error) Error {
+	return fn(req, code, err)
+}
 
 // Panic is an error resolved from a panic with a stack trace.
 type Panic struct {
@@ -36,39 +47,43 @@ func (e Panic) String() string {
 
 // Abort resolves an error to a view and encodes the response.
 func (h *Handler) Abort(w http.ResponseWriter, req *http.Request, err error) {
-	if err == nil {
-		return
-	}
 	switch err {
+	case nil:
+		return
 	case ErrEncodeAccept:
 		abort(w, http.StatusNotAcceptable)
 		return
-	case ErrNotFound:
-		err = h.resolve(req, http.StatusNotFound, err)
-	case ErrDecodeContentType:
-		err = h.resolve(req, http.StatusUnsupportedMediaType, err)
-	case ErrDecodeRequestData:
-		err = h.resolve(req, http.StatusBadRequest, err)
 	}
-	var view Error
-	switch e := err.(type) {
-	case Error:
-		view = e
-	case ErrMethodNotAllowed:
-		allowed := err.Error()
-		w.Header().Set("Allow", allowed)
-		view = h.resolve(req, http.StatusMethodNotAllowed, err)
-	case ValidationError:
-		view = h.resolve(req, http.StatusUnprocessableEntity, err)
-	default:
-		view = h.resolve(req, http.StatusInternalServerError, err)
-		h.log(req, err)
-	}
+	view := h.resolve(w, req, err)
 	code := view.StatusCode()
 	err = h.Encode(w, req, view, code)
 	if err != nil {
 		h.log(req, err)
 	}
+}
+
+// resolve resolves errors to an error view.
+func (h *Handler) resolve(w http.ResponseWriter, req *http.Request, err error) Error {
+	switch err {
+	case ErrNotFound:
+		return h.resolver.Resolve(req, http.StatusNotFound, err)
+	case ErrDecodeContentType:
+		return h.resolver.Resolve(req, http.StatusUnsupportedMediaType, err)
+	case ErrDecodeRequestData:
+		return h.resolver.Resolve(req, http.StatusBadRequest, err)
+	}
+	switch e := err.(type) {
+	case Error:
+		return e
+	case ErrMethodNotAllowed:
+		allowed := err.Error()
+		w.Header().Set("Allow", allowed)
+		return h.resolver.Resolve(req, http.StatusMethodNotAllowed, err)
+	case ValidationError:
+		return h.resolver.Resolve(req, http.StatusUnprocessableEntity, err)
+	}
+	h.log(req, err)
+	return h.resolver.Resolve(req, http.StatusInternalServerError, err)
 }
 
 // ErrorText returns descriptions for mux errors.

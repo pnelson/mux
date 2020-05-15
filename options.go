@@ -40,7 +40,7 @@ func WithEncoders(encoders map[string]Encoder) Option {
 // WithResolver sets the error resolver.
 func WithResolver(resolver Resolver) Option {
 	return func(h *Handler) {
-		h.resolve = resolver
+		h.resolver = resolver
 	}
 }
 

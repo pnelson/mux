@@ -21,7 +21,7 @@ type Handler struct {
 	locales    language.Matcher
 	decoders   map[string]Decoder
 	encoders   map[string]Encoder
-	resolve    Resolver
+	resolver   Resolver
 	pool       Pool
 	log        Logger
 }
@@ -58,8 +58,8 @@ func New(opts ...Option) *Handler {
 			"application/json": encoder,
 		}
 	}
-	if h.resolve == nil {
-		h.resolve = defaultResolver
+	if h.resolver == nil {
+		h.resolver = ResolverFunc(defaultResolver)
 	}
 	if h.pool == nil {
 		h.pool = &pool{free: make(chan *bytes.Buffer, 1<<6)}

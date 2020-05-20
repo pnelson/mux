@@ -19,9 +19,13 @@ type Encoder interface {
 	Headers() http.Header
 }
 
-// ErrEncodeAccept indicates that there was no mapping
-// of Accept header media type to an Encoder.
-var ErrEncodeAccept = errors.New("mux: no encoder matched request")
+// EncoderFunc represents the ability to negotiate an Encoder
+// from an incoming HTTP request. Return the error ErrEncodeMatch
+// to respond with a 406 Not Acceptable error.
+type EncoderFunc func(req *http.Request) (Encoder, error)
+
+// ErrEncodeMatch indicates that request failed to negotiate an Encoder.
+var ErrEncodeMatch = errors.New("mux: no encoder matched request")
 
 // Encode encodes the view and responds to the request.
 func (h *Handler) Encode(w http.ResponseWriter, req *http.Request, view Viewable, code int) error {
@@ -46,26 +50,35 @@ func (h *Handler) Encode(w http.ResponseWriter, req *http.Request, view Viewable
 	return err
 }
 
-func (h *Handler) encoder(req *http.Request) (Encoder, error) {
-	accept := req.Header.Get("Accept")
-	// mime.ParseMediaType returns an unexported error for
-	// the empty string, so we short-circuit it here.
-	// An exact match is great, too.
-	e, ok := h.encoders[accept]
-	if ok {
-		return e, nil
+// NewAcceptEncoder returns an EncoderFunc that returns the
+// first negotiated Encoder based on the request Accept header.
+func NewAcceptEncoder(e Encoder, mediaTypes []string) EncoderFunc {
+	m := make(map[string]struct{})
+	for _, t := range mediaTypes {
+		m[t] = struct{}{}
 	}
-	for _, header := range strings.Split(accept, ",") {
-		media, _, err := mime.ParseMediaType(header)
-		if err != nil {
-			return nil, err
-		}
-		e, ok := h.encoders[media]
+	fn := func(req *http.Request) (Encoder, error) {
+		accept := req.Header.Get("Accept")
+		// mime.ParseMediaType returns an unexported error for
+		// the empty string, so we short-circuit it here.
+		// An exact match is great, too.
+		_, ok := m[accept]
 		if ok {
 			return e, nil
 		}
+		for _, t := range strings.Split(accept, ",") {
+			mediaType, _, err := mime.ParseMediaType(t)
+			if err != nil {
+				return nil, err
+			}
+			_, ok := m[mediaType]
+			if ok {
+				return e, nil
+			}
+		}
+		return nil, ErrEncodeMatch
 	}
-	return nil, ErrEncodeAccept
+	return fn
 }
 
 type jsonEncoder struct{}

@@ -30,13 +30,13 @@ func TestEncode(t *testing.T) {
 	}
 }
 
-func TestErrEncodeAccept(t *testing.T) {
+func TestErrEncodeMatch(t *testing.T) {
 	h := New()
 	w := httptest.NewRecorder()
 	req := newTestRequest(http.MethodGet, "/", nil)
 	req.Header.Set("Accept", "text/html")
 	err := h.Encode(w, req, testData{N: 1}, http.StatusTeapot)
-	if err != ErrEncodeAccept {
+	if err != ErrEncodeMatch {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

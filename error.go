@@ -50,7 +50,7 @@ func (h *Handler) Abort(w http.ResponseWriter, req *http.Request, err error) {
 	switch err {
 	case nil:
 		return
-	case ErrEncodeAccept:
+	case ErrEncodeMatch:
 		abort(w, http.StatusNotAcceptable)
 		return
 	}

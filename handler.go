@@ -20,7 +20,7 @@ type Handler struct {
 	middleware []func(http.Handler) http.Handler
 	locales    language.Matcher
 	decoders   map[string]Decoder
-	encoders   map[string]Encoder
+	encoder    EncoderFunc
 	resolver   Resolver
 	pool       Pool
 	log        Logger
@@ -49,14 +49,13 @@ func New(opts ...Option) *Handler {
 			"application/json": &jsonDecoder{},
 		}
 	}
-	if h.encoders == nil {
-		encoder := &jsonEncoder{}
-		h.encoders = map[string]Encoder{
-			"":                 encoder,
-			"*/*":              encoder,
-			"application/*":    encoder,
-			"application/json": encoder,
-		}
+	if h.encoder == nil {
+		h.encoder = NewAcceptEncoder(&jsonEncoder{}, []string{
+			"",
+			"*/*",
+			"application/*",
+			"application/json",
+		})
 	}
 	if h.resolver == nil {
 		h.resolver = ResolverFunc(defaultResolver)

@@ -30,10 +30,10 @@ func WithDecoders(decoders map[string]Decoder) Option {
 	}
 }
 
-// WithEncoders sets the content-type/encoder mapping.
-func WithEncoders(encoders map[string]Encoder) Option {
+// WithEncoder sets the encoder negotiation function.
+func WithEncoder(fn EncoderFunc) Option {
 	return func(h *Handler) {
-		h.encoders = encoders
+		h.encoder = fn
 	}
 }
 

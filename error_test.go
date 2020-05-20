@@ -13,7 +13,7 @@ func TestAbort(t *testing.T) {
 	var tests = map[int]error{
 		http.StatusBadRequest:           ErrDecodeRequestData, // 400
 		http.StatusNotFound:             ErrNotFound,          // 404
-		http.StatusNotAcceptable:        ErrEncodeAccept,      // 406
+		http.StatusNotAcceptable:        ErrEncodeMatch,       // 406
 		http.StatusUnsupportedMediaType: ErrDecodeContentType, // 415
 		http.StatusInternalServerError:  errors.New("test"),   // 500
 	}

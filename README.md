@@ -25,7 +25,7 @@ Use of this package gives you the following:
 - locale detection for internationalization
 - export routes to static files
 
-Individual components of this package are customizable and/or replacable where
+Individual components of this package are customizable and/or replaceable where
 possible. Application structure is not imposed. Defaults for a greenfield JSON
 API are preconfigured.
 

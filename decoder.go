@@ -19,6 +19,11 @@ type Decoder interface {
 	Decode(req *http.Request, form Form) error
 }
 
+// DecoderFunc represents the ability to negotiate a Decoder
+// from an incoming HTTP request. Return the error ErrDecodeContentType
+// to respond with a 415 Unsupported Media Type error.
+type DecoderFunc func(req *http.Request) (Decoder, error)
+
 // ValidationError represents a form validation error.
 type ValidationError struct {
 	err error
@@ -38,14 +43,9 @@ var (
 // Decode decodes, sanitizes and validates the request body
 // and stores the result in to the value pointed to by form.
 func (h *Handler) Decode(req *http.Request, form Form) error {
-	v := req.Header.Get("Content-Type")
-	media, _, err := mime.ParseMediaType(v)
+	d, err := h.decoder(req)
 	if err != nil {
-		return ErrDecodeContentType
-	}
-	d, ok := h.decoders[media]
-	if !ok {
-		return ErrDecodeContentType
+		return err
 	}
 	err = d.Decode(req, form)
 	if err != nil {
@@ -56,6 +56,20 @@ func (h *Handler) Decode(req *http.Request, form Form) error {
 		return ValidationError{err: err}
 	}
 	return nil
+}
+
+// NewContentTypeDecoder returns a DecoderFunc that returns the
+// first negotiated Decoder based on the request Content-Type header.
+func NewContentTypeDecoder(d Decoder, contentType string) DecoderFunc {
+	fn := func(req *http.Request) (Decoder, error) {
+		v := req.Header.Get("Content-Type")
+		mediaType, _, err := mime.ParseMediaType(v)
+		if err != nil || mediaType != contentType {
+			return nil, ErrDecodeContentType
+		}
+		return d, nil
+	}
+	return fn
 }
 
 type jsonDecoder struct{}

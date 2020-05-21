@@ -42,10 +42,11 @@ The error views are encoded with `Encode`, also available for use within
 default matches on `Accept` header media types. A request that fails to
 negotiate an encoder will be served a plain text HTTP 406 Not Acceptable error.
 
-Use `Decode` to decode incoming request data to some validated data structure.
-The handler can be configured with a mapping of request `Content-Type` headers
-to `Decoder`s. A request that is not mapped to a decoder will be served a HTTP
-415 Unsupported Media Type error, encoded per the negotiated encoder.
+Use `Decode` to decode incoming request data to a validated data structure.
+The handler can be configured with a `DecoderFunc` that negotiates a `Decoder`
+from an incoming HTTP request. The default matches `Content-Type` headers. A
+request that fails to negotiate a decoder will be served a HTTP 415 Unsupported
+Media Type error, encoded with the negotiated encoder.
 
 The unique request identifier can be retrieved with `RequestID`. This may be
 useful for implementing custom `Logger`s or `Error` views.

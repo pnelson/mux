@@ -19,7 +19,7 @@ type Handler struct {
 	router     Router
 	middleware []func(http.Handler) http.Handler
 	locales    language.Matcher
-	decoders   map[string]Decoder
+	decoder    DecoderFunc
 	encoder    EncoderFunc
 	resolver   Resolver
 	pool       Pool
@@ -44,10 +44,8 @@ func New(opts ...Option) *Handler {
 	if h.locales == nil {
 		h.locales = language.NewMatcher([]language.Tag{language.English})
 	}
-	if h.decoders == nil {
-		h.decoders = map[string]Decoder{
-			"application/json": &jsonDecoder{},
-		}
+	if h.decoder == nil {
+		h.decoder = NewContentTypeDecoder(&jsonDecoder{}, "application/json")
 	}
 	if h.encoder == nil {
 		h.encoder = NewAcceptEncoder(&jsonEncoder{}, []string{

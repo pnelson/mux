@@ -23,10 +23,10 @@ func WithLocales(matcher language.Matcher) Option {
 	}
 }
 
-// WithDecoders sets the content-type/encoder mapping.
-func WithDecoders(decoders map[string]Decoder) Option {
+// WithDecoder sets the decoder negotiation function.
+func WithDecoder(fn DecoderFunc) Option {
 	return func(h *Handler) {
-		h.decoders = decoders
+		h.decoder = fn
 	}
 }
 

@@ -101,7 +101,6 @@ func TestNodeMatch(t *testing.T) {
 
 		{"/:name", "/carl", true, Params{"name": "carl"}},
 		{"/:name", "/carl/", false, nil},
-		{"/:name", "/carl/", false, nil},
 		{"/:name", "/", false, nil},
 		{"/:name/", "/carl/", true, Params{"name": "carl"}},
 		{"/:name/", "/carl/no", false, nil},

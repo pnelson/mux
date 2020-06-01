@@ -114,6 +114,20 @@ func TestTreeMatch(t *testing.T) {
 	}
 }
 
+func TestTreeMatchNotFound(t *testing.T) {
+	r := NewRoute("/romulus", nil)
+	tree := &tree{}
+	err := tree.Add(r)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/remus", nil)
+	_, _, err = tree.Match(req)
+	if err != ErrNotFound {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestTreeWalk(t *testing.T) {
 	patterns := []string{"/rubicon", "/ruber", "/rubicundus", "/romanus", "/romane", "/romulus", "/rubens"}
 	tree := &tree{}

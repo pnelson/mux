@@ -66,26 +66,25 @@ func (n *node) addStatic(r *Route, pattern string) error {
 		n.label = pattern[:j]
 		return n.addNode(r, pattern[j:])
 	}
-	if i == 0 {
-		prefix := pattern[0]
+	if n.label == "/" && pattern == "/" {
+		return n.addNode(r, "")
+	}
+	if i == 0 || i == len(n.label) {
+		prefix := pattern[i]
 		for _, e := range n.edges {
 			if e.param || e.label[0] > prefix {
 				break
 			}
-			if prefixIndex(e.label, pattern) > 0 {
-				return e.addNode(r, pattern)
+			if prefixIndex(e.label, pattern[i:]) > 0 {
+				return e.addNode(r, pattern[i:])
 			}
 		}
-		n = n.addEdge(&node{label: pattern[:j]})
-		return n.addNode(r, pattern[j:])
+	} else {
+		s := n.addEdge(&node{label: n.label[i:], route: n.route, edges: append(n.edges[:0], n.edges...)})
+		n.label = pattern[:i]
+		n.route = nil
+		n.edges = []*node{s}
 	}
-	if i == len(n.label) {
-		return n.addNode(r, pattern[i:])
-	}
-	s := n.addEdge(&node{label: n.label[i:], route: n.route, edges: append(n.edges[:0], n.edges...)})
-	n.label = pattern[:i]
-	n.route = nil
-	n.edges = []*node{s}
 	if j > i {
 		n = n.addEdge(&node{label: pattern[i:j]})
 	}

@@ -77,21 +77,24 @@ func TestTreeMatch(t *testing.T) {
 	var tests = []struct {
 		pattern string
 		path    string
+		params  Params
 	}{
-		{"/romane", "/romane"},
-		{"/romanus", "/romanus"},
-		{"/romulus", "/romulus"},
-		{"/rubens", "/rubens"},
-		{"/ruber", "/ruber"},
-		{"/rubicon", "/rubicon"},
-		{"/rubicundus", "/rubicundus"},
-		{"/z", "/z"},
-		{"/:a", "/a"},
-		{"/:a/", "/a/"},
-		{"/:a/z", "/a/z"},
-		{"/:a/:b", "/a/b"},
-		{"/:a/*", "/a/b/c"},
-		{"/", "/"},
+		{"/romane", "/romane", nil},
+		{"/romanus", "/romanus", nil},
+		{"/romulus", "/romulus", nil},
+		{"/rubens", "/rubens", nil},
+		{"/ruber", "/ruber", nil},
+		{"/rubicon", "/rubicon", nil},
+		{"/rubicundus", "/rubicundus", nil},
+		{"/s", "/s", nil},
+		{"/s/a/", "/s/a/", nil},
+		{"/s/a/b", "/s/a/b", nil},
+		{"/p/:a", "/p/a", Params{"a": "a"}},
+		{"/p/:a/", "/p/a/", Params{"a": "a"}},
+		{"/p/:a/z", "/p/a/z", Params{"a": "a"}},
+		{"/p/:a/:b", "/p/a/b", Params{"a": "a", "b": "b"}},
+		{"/p/:a/*", "/p/a/b/c", Params{"a": "a", "*": "b/c"}},
+		{"/", "/", nil},
 	}
 	tree := &tree{}
 	for _, tt := range tests {

@@ -29,14 +29,45 @@ func TestNodeAddStatic(t *testing.T) {
 	assertEdges(t, n.edges[0].edges[0], []string{"e", "us"})
 	assertRoute(t, n.edges[0].edges[0].edges[0], "e", "/romane")
 	assertRoute(t, n.edges[0].edges[0].edges[1], "us", "/romanus")
+	assertEdges(t, n.edges[0].edges[0].edges[0], nil)
+	assertEdges(t, n.edges[0].edges[0].edges[1], nil)
 	assertRoute(t, n.edges[0].edges[1], "ulus", "/romulus")
 	assertEdges(t, n.edges[1], []string{"e", "ic"})
 	assertEdges(t, n.edges[1].edges[0], []string{"ns", "r"})
 	assertRoute(t, n.edges[1].edges[0].edges[0], "ns", "/rubens")
 	assertRoute(t, n.edges[1].edges[0].edges[1], "r", "/ruber")
+	assertEdges(t, n.edges[1].edges[0].edges[0], nil)
+	assertEdges(t, n.edges[1].edges[0].edges[1], nil)
 	assertEdges(t, n.edges[1].edges[1], []string{"on", "undus"})
 	assertRoute(t, n.edges[1].edges[1].edges[0], "on", "/rubicon")
 	assertRoute(t, n.edges[1].edges[1].edges[1], "undus", "/rubicundus")
+	assertEdges(t, n.edges[1].edges[1].edges[0], nil)
+	assertEdges(t, n.edges[1].edges[1].edges[1], nil)
+}
+
+func TestNodeAddStaticNested(t *testing.T) {
+	var tests = []string{
+		"/a",
+		"/a/b/",
+		"/a/b/c",
+		"/a/b/c/d",
+	}
+	n := &node{}
+	for _, pattern := range tests {
+		r := NewRoute(pattern, nil)
+		err := n.add(r)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+	assertRoute(t, n, "/a", "/a")
+	assertEdges(t, n, []string{"/b/"})
+	assertRoute(t, n.edges[0], "/b/", "/a/b/")
+	assertEdges(t, n.edges[0], []string{"c"})
+	assertRoute(t, n.edges[0].edges[0], "c", "/a/b/c")
+	assertEdges(t, n.edges[0].edges[0], []string{"/d"})
+	assertRoute(t, n.edges[0].edges[0].edges[0], "/d", "/a/b/c/d")
+	assertEdges(t, n.edges[0].edges[0].edges[0], nil)
 }
 
 func TestNodeAddParam(t *testing.T) {
@@ -178,7 +209,7 @@ func assertNode(t *testing.T, n *node, label string) {
 
 func assertRoute(t *testing.T, n *node, label, pattern string) {
 	if n.route == nil {
-		t.Fatal("should be non-nil route")
+		t.Fatalf("should be non-nil route for '%s'", pattern)
 	}
 	assertLabel(t, n, label)
 	assertString(t, "route", n.route.pattern, pattern)

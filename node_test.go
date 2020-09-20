@@ -45,6 +45,32 @@ func TestNodeAddStatic(t *testing.T) {
 	assertEdges(t, n.edges[1].edges[1].edges[1], nil)
 }
 
+func TestNodeAddStaticSplit(t *testing.T) {
+	var tests = []string{
+		"/aa",
+		"/ab",
+		"/ac",
+		"/",
+	}
+	n := &node{}
+	for _, pattern := range tests {
+		r := NewRoute(pattern, nil)
+		err := n.add(r)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+	assertRoute(t, n, "/", "/")
+	assertNode(t, n.edges[0], "a")
+	assertEdges(t, n.edges[0], []string{"a", "b", "c"})
+	assertRoute(t, n.edges[0].edges[0], "a", "/aa")
+	assertEdges(t, n.edges[0].edges[0], nil)
+	assertRoute(t, n.edges[0].edges[1], "b", "/ab")
+	assertEdges(t, n.edges[0].edges[1], nil)
+	assertRoute(t, n.edges[0].edges[2], "c", "/ac")
+	assertEdges(t, n.edges[0].edges[2], nil)
+}
+
 func TestNodeAddStaticNested(t *testing.T) {
 	var tests = []string{
 		"/a",

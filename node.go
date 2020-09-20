@@ -80,7 +80,7 @@ func (n *node) addStatic(r *Route, pattern string) error {
 			}
 		}
 	} else {
-		s := n.addEdge(&node{label: n.label[i:], route: n.route, edges: append(n.edges[:0], n.edges...)})
+		s := &node{label: n.label[i:], route: n.route, edges: n.edges}
 		n.label = pattern[:i]
 		n.route = nil
 		n.edges = []*node{s}

@@ -59,12 +59,16 @@ func (h *Handler) Decode(req *http.Request, form Form) error {
 }
 
 // NewContentTypeDecoder returns a DecoderFunc that returns the
-// first negotiated Decoder based on the request Content-Type header.
-func NewContentTypeDecoder(d Decoder, contentType string) DecoderFunc {
+// first negotiated Decoder from the request Content-Type header.
+func NewContentTypeDecoder(decoders map[string]Decoder) DecoderFunc {
 	fn := func(req *http.Request) (Decoder, error) {
 		v := req.Header.Get("Content-Type")
 		mediaType, _, err := mime.ParseMediaType(v)
-		if err != nil || mediaType != contentType {
+		if err != nil {
+			return nil, ErrDecodeContentType
+		}
+		d, ok := decoders[mediaType]
+		if !ok {
 			return nil, ErrDecodeContentType
 		}
 		return d, nil

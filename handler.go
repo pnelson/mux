@@ -45,14 +45,17 @@ func New(opts ...Option) *Handler {
 		h.locales = language.NewMatcher([]language.Tag{language.English})
 	}
 	if h.decoder == nil {
-		h.decoder = NewContentTypeDecoder(&jsonDecoder{}, "application/json")
+		h.decoder = NewContentTypeDecoder(map[string]Decoder{
+			"application/json": &jsonDecoder{},
+		})
 	}
 	if h.encoder == nil {
-		h.encoder = NewAcceptEncoder(&jsonEncoder{}, []string{
-			"",
-			"*/*",
-			"application/*",
-			"application/json",
+		encoder := &jsonEncoder{}
+		h.encoder = NewAcceptEncoder(map[string]Encoder{
+			"":                 encoder,
+			"*/*":              encoder,
+			"application/*":    encoder,
+			"application/json": encoder,
 		})
 	}
 	if h.resolver == nil {

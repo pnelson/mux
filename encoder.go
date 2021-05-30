@@ -51,18 +51,14 @@ func (h *Handler) Encode(w http.ResponseWriter, req *http.Request, view Viewable
 }
 
 // NewAcceptEncoder returns an EncoderFunc that returns the
-// first negotiated Encoder based on the request Accept header.
-func NewAcceptEncoder(e Encoder, mediaTypes []string) EncoderFunc {
-	m := make(map[string]struct{})
-	for _, t := range mediaTypes {
-		m[t] = struct{}{}
-	}
+// first Encoder negotiated from the request Accept header.
+func NewAcceptEncoder(encoders map[string]Encoder) EncoderFunc {
 	fn := func(req *http.Request) (Encoder, error) {
 		accept := req.Header.Get("Accept")
 		// mime.ParseMediaType returns an unexported error for
 		// the empty string, so we short-circuit it here.
 		// An exact match is great, too.
-		_, ok := m[accept]
+		e, ok := encoders[accept]
 		if ok {
 			return e, nil
 		}
@@ -71,7 +67,7 @@ func NewAcceptEncoder(e Encoder, mediaTypes []string) EncoderFunc {
 			if err != nil {
 				return nil, err
 			}
-			_, ok := m[mediaType]
+			e, ok := encoders[mediaType]
 			if ok {
 				return e, nil
 			}

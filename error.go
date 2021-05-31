@@ -25,6 +25,17 @@ func (fn ResolverFunc) Resolve(req *http.Request, code int, err error) Error {
 	return fn(req, code, err)
 }
 
+// ErrRedirect represents a redirect response.
+type ErrRedirect struct {
+	URL  string
+	Code int
+}
+
+// Error implements the error interface.
+func (e ErrRedirect) Error() string {
+	return fmt.Sprintf("%d: %s", e.Code, e.URL)
+}
+
 // Panic is an error resolved from a panic with a stack trace.
 type Panic struct {
 	err   interface{}
@@ -52,6 +63,11 @@ func (h *Handler) Abort(w http.ResponseWriter, req *http.Request, err error) {
 		return
 	case ErrEncodeMatch:
 		abort(w, http.StatusNotAcceptable)
+		return
+	}
+	redirect, ok := err.(ErrRedirect)
+	if ok {
+		http.Redirect(w, req, redirect.URL, redirect.Code)
 		return
 	}
 	view := h.resolve(w, req, err)

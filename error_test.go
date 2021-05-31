@@ -28,6 +28,17 @@ func TestAbort(t *testing.T) {
 	}
 }
 
+func TestAbortErrRedirect(t *testing.T) {
+	h := New()
+	w := httptest.NewRecorder()
+	req := newTestRequest(http.MethodGet, "/", nil)
+	h.Abort(w, req, h.Redirect("/test", http.StatusFound))
+	resp := w.Result()
+	resp.Body.Close()
+	assertStatus(t, resp, http.StatusFound)
+	assertHeader(t, resp, "Location", "/test")
+}
+
 func TestAbortErrMethodNotAllowed(t *testing.T) {
 	h := New()
 	w := httptest.NewRecorder()

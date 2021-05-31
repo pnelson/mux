@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"runtime/debug"
 	"sync/atomic"
 
@@ -109,6 +110,23 @@ func (h *Handler) Handle(pattern string, handler http.Handler, opts ...RouteOpti
 		panic(err)
 	}
 	return r
+}
+
+// Redirect replies to the request with a redirect.
+func (h *Handler) Redirect(url string, code int) error {
+	return ErrRedirect{URL: url, Code: code}
+}
+
+// RedirectTo replies to the request with a redirect to a named route.
+func (h *Handler) RedirectTo(name string, params Params, query url.Values, code int) error {
+	url, err := h.Build(name, params)
+	if err != nil {
+		return err
+	}
+	if len(query) > 0 {
+		url += "?" + query.Encode()
+	}
+	return h.Redirect(url, code)
 }
 
 // ServeHTTP implements the http.Handler interface.

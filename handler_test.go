@@ -1,9 +1,11 @@
 package mux
 
 import (
+	"embed"
 	"encoding/json"
 	"errors"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +13,9 @@ import (
 	"strings"
 	"testing"
 )
+
+//go:embed testdata
+var testdataFS embed.FS
 
 type testData struct {
 	N int `json:"n"`
@@ -127,11 +132,15 @@ func testPanic(t *testing.T, req *http.Request) {
 
 func TestFileServer(t *testing.T) {
 	h := New()
-	h.FileServer("/public/*", http.Dir("testdata"))
+	testdata, err := fs.Sub(testdataFS, "testdata")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	h.FileServer("/prefix/*", testdata)
 	server := httptest.NewServer(h)
 	defer server.Close()
 	client := server.Client()
-	resp, err := client.Get(server.URL + "/public/test_file_server")
+	resp, err := client.Get(server.URL + "/prefix/base.ext")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

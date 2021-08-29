@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -91,13 +92,22 @@ func (h *Handler) Build(name string, params Params) (string, error) {
 	return b.Build(name, params)
 }
 
-// FileServer registers a file system.
+// FileServer registers a fs.FS as a file server.
+//
 // The pattern is expected to be a prefix wildcard route.
 // The pattern prefix is removed from the request URL before handled.
-func (h *Handler) FileServer(pattern string, fs http.FileSystem) {
+//
+// If fs is an implementation of CacheControlFS, the files will be
+// served with the associated Cache-Control policy.
+//
+// Wrap the fs with AssetCacheFS to apply an aggressive caching policy,
+// suitable for asset file names that contain a hash of their contents.
+func (h *Handler) FileServer(pattern string, fs fs.FS, opts ...RouteOption) *Route {
+	opt := WithMethod(http.MethodGet)
+	opts = append([]RouteOption{opt}, opts...)
 	prefix := pattern[:len(pattern)-1]
-	handler := http.StripPrefix(prefix, http.FileServer(fs))
-	h.Handle(pattern, handler, WithMethod(http.MethodGet))
+	handler := http.StripPrefix(prefix, &fileServer{h, fs})
+	return h.Handle(pattern, handler, opts...)
 }
 
 // Handle registers a standard net/http Handler.

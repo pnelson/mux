@@ -25,6 +25,61 @@ func (fn ResolverFunc) Resolve(req *http.Request, code int, err error) Error {
 	return fn(req, code, err)
 }
 
+// ErrorView is the default error view.
+type ErrorView struct {
+	Code      int    `json:"code"`
+	Title     string `json:"title"`
+	Message   string `json:"message,omitempty"`
+	RequestID string `json:"request_id"`
+}
+
+// Error implements the error interface.
+func (v ErrorView) Error() string {
+	return v.Message
+}
+
+// StatusCode implements the mux.Error interface.
+func (v ErrorView) StatusCode() int {
+	return v.Code
+}
+
+// NewErrorView returns a new ErrorView.
+func NewErrorView(req *http.Request, code int, err error) ErrorView {
+	return ErrorView{
+		Code:      code,
+		Title:     http.StatusText(code),
+		Message:   ErrorText(code, err),
+		RequestID: RequestID(req),
+	}
+}
+
+// ErrorText returns supplementary message text for errors.
+//
+// Explicit descriptions are returned for mux errors. The error text is
+// returned for http.StatusUnprocessableEntity status codes and instances
+// of mux.ValidationError. The empty string is returned for unknown errors.
+func ErrorText(code int, err error) string {
+	switch code {
+	case http.StatusUnprocessableEntity:
+		return err.Error()
+	case http.StatusInternalServerError:
+		return "An unexpected error has occurred."
+	}
+	switch err {
+	case ErrDecodeContentType:
+		return "Invalid content-type header."
+	case ErrDecodeRequestData:
+		return "Invalid request data."
+	}
+	switch err.(type) {
+	case ErrMethodNotAllowed:
+		return "The method is not allowed for the requested URL."
+	case ValidationError:
+		return err.Error()
+	}
+	return ""
+}
+
 // ErrRedirect represents a redirect response.
 type ErrRedirect struct {
 	URL  string
@@ -102,27 +157,6 @@ func (h *Handler) resolve(w http.ResponseWriter, req *http.Request, err error) E
 	return h.resolver.Resolve(req, http.StatusInternalServerError, err)
 }
 
-// ErrorText returns descriptions for mux errors.
-// The empty string is returned for unknown errors.
-func ErrorText(code int, err error) string {
-	if code == http.StatusInternalServerError {
-		return "An unexpected error has occurred."
-	}
-	switch err {
-	case ErrDecodeContentType:
-		return "Invalid content-type header."
-	case ErrDecodeRequestData:
-		return "Invalid request data."
-	}
-	switch err.(type) {
-	case ErrMethodNotAllowed:
-		return "The method is not allowed for the requested URL."
-	case ValidationError:
-		return err.Error()
-	}
-	return ""
-}
-
 // abort replies to the request with a plain text error message.
 func abort(w http.ResponseWriter, code int) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -131,19 +165,4 @@ func abort(w http.ResponseWriter, code int) error {
 	message := http.StatusText(code)
 	_, err := fmt.Fprintln(w, message)
 	return err
-}
-
-type defaultErrorView struct {
-	Code      int    `json:"code"`
-	Title     string `json:"title"`
-	Message   string `json:"message,omitempty"`
-	RequestID string `json:"request_id"`
-}
-
-func (v defaultErrorView) Error() string {
-	return v.Message
-}
-
-func (v defaultErrorView) StatusCode() int {
-	return v.Code
 }

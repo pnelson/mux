@@ -250,12 +250,7 @@ func RequestID(req *http.Request) string {
 
 // defaultResolver represents the default resolver.
 func defaultResolver(req *http.Request, code int, err error) Error {
-	return defaultErrorView{
-		Code:      code,
-		Title:     http.StatusText(code),
-		Message:   ErrorText(code, err),
-		RequestID: RequestID(req),
-	}
+	return NewErrorView(req, code, err)
 }
 
 // defaultLogger represents the default logger.

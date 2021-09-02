@@ -120,7 +120,7 @@ func testPanic(t *testing.T, req *http.Request) {
 	}
 	defer resp.Body.Close()
 	assertStatus(t, resp, http.StatusInternalServerError)
-	var view defaultErrorView
+	var view ErrorView
 	err = json.NewDecoder(resp.Body).Decode(&view)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

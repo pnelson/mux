@@ -127,6 +127,9 @@ func (h *Handler) Abort(w http.ResponseWriter, req *http.Request, err error) {
 	}
 	view := h.resolve(w, req, err)
 	code := view.StatusCode()
+	if code == http.StatusInternalServerError {
+		h.log(req, err)
+	}
 	err = h.Encode(w, req, view, code)
 	if err != nil {
 		h.log(req, err)
@@ -153,7 +156,6 @@ func (h *Handler) resolve(w http.ResponseWriter, req *http.Request, err error) E
 	case ValidationError:
 		return h.resolver.Resolve(req, http.StatusUnprocessableEntity, err)
 	}
-	h.log(req, err)
 	return h.resolver.Resolve(req, http.StatusInternalServerError, err)
 }
 

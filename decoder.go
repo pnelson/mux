@@ -34,6 +34,11 @@ func (e ValidationError) Error() string {
 	return e.err.Error()
 }
 
+// Unwrap returns the underlying error.
+func (e ValidationError) Unwrap() error {
+	return e.err
+}
+
 // Decoder errors.
 var (
 	ErrDecodeContentType = errors.New("mux: no decoder matched request")

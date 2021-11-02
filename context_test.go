@@ -1,7 +1,6 @@
 package mux
 
 import (
-	"bytes"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -24,18 +23,19 @@ func TestRequestID(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	req.Header.Set("X-Request-ID", "test")
+	want := "test"
+	req.Header.Set("X-Request-ID", want)
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	have, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if bytes.Equal(body, nil) {
-		t.Fatalf("request id should be set")
+	if string(have) != want {
+		t.Fatalf("request id\nhave %q\nwant %q", have, want)
 	}
 }
 
@@ -64,7 +64,7 @@ func TestLocale(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !bytes.Equal(have, []byte(want)) {
+	if string(have) != want {
 		t.Fatalf("locale\nhave %q\nwant %q", have, want)
 	}
 }
@@ -88,8 +88,8 @@ func TestLocaleDefault(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want := []byte("en")
-	if !bytes.Equal(have, want) {
+	want := "en"
+	if string(have) != want {
 		t.Fatalf("locale\nhave %q\nwant %q", have, want)
 	}
 }
@@ -119,8 +119,8 @@ func TestLocaleDefaultAcceptRegion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want := []byte("en")
-	if !bytes.Equal(have, want) {
+	want := "en"
+	if string(have) != want {
 		t.Fatalf("locale\nhave %q\nwant %q", have, want)
 	}
 }
@@ -140,11 +140,12 @@ func TestMatch(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	have, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if bytes.Equal(body, nil) {
-		t.Fatalf("matched route should be set")
+	want := "index"
+	if string(have) != want {
+		t.Fatalf("match\nhave %q\nwant %q", have, want)
 	}
 }

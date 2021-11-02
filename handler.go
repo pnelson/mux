@@ -20,7 +20,7 @@ import (
 type Handler struct {
 	router     Router
 	middleware []func(http.Handler) http.Handler
-	locales    language.Matcher
+	locales    *localeMatcher
 	decoder    DecoderFunc
 	encoder    EncoderFunc
 	resolver   Resolver
@@ -44,7 +44,7 @@ func New(opts ...Option) *Handler {
 		h.router = &tree{}
 	}
 	if h.locales == nil {
-		h.locales = language.NewMatcher([]language.Tag{language.English})
+		h.locales = newLocaleMatcher([]language.Tag{language.English})
 	}
 	if h.decoder == nil {
 		h.decoder = NewContentTypeDecoder(map[string]Decoder{
@@ -149,7 +149,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // init initializes a new request context.
 func (h *Handler) init(req *http.Request) *http.Request {
 	n := atomic.AddUint64(&seq, 1)
-	rc := &requestContext{seq: n, locale: h.locale(req)}
+	rc := &requestContext{seq: n, locale: h.locales.match(req)}
 	return setContext(req, rc)
 }
 
@@ -179,16 +179,6 @@ func (h *Handler) abort(w http.ResponseWriter, req *http.Request) {
 		p := Panic{err: err, stack: debug.Stack()}
 		h.Abort(w, req, p)
 	}
-}
-
-// locale parses the Accept-Language header and returns
-// the BCP 47 language tag for the request.
-func (h *Handler) locale(req *http.Request) language.Tag {
-	accept := req.Header.Get("Accept-Language")
-	// Intentionally ignored error as the default language will be matched.
-	locales, _, _ := language.ParseAcceptLanguage(accept)
-	tag, _, _ := h.locales.Match(locales...)
-	return tag
 }
 
 // Use appends middleware to the global middleware stack.

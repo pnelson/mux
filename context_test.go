@@ -41,8 +41,7 @@ func TestRequestID(t *testing.T) {
 
 func TestLocale(t *testing.T) {
 	want := "zh-TW"
-	matcher := language.NewMatcher([]language.Tag{language.MustParse(want)})
-	h := New(WithLocales(matcher))
+	h := New(WithLocales([]language.Tag{language.MustParse(want)}))
 	h.Add("/", func(w http.ResponseWriter, req *http.Request) error {
 		tag := Locale(req).String()
 		_, err := w.Write([]byte(tag))
@@ -81,6 +80,37 @@ func TestLocaleDefault(t *testing.T) {
 	defer server.Close()
 	client := server.Client()
 	resp, err := client.Get(server.URL)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+	have, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	want := []byte("en")
+	if !bytes.Equal(have, want) {
+		t.Fatalf("locale\nhave %q\nwant %q", have, want)
+	}
+}
+
+// https://github.com/golang/go/issues/24211
+func TestLocaleDefaultAcceptRegion(t *testing.T) {
+	h := New()
+	h.Add("/", func(w http.ResponseWriter, req *http.Request) error {
+		tag := Locale(req).String()
+		_, err := w.Write([]byte(tag))
+		return err
+	}, WithMethod(http.MethodGet))
+	server := httptest.NewServer(h)
+	defer server.Close()
+	client := server.Client()
+	req, err := http.NewRequest(http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

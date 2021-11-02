@@ -16,10 +16,10 @@ func WithRouter(router Router) Option {
 	}
 }
 
-// WithLocales sets the supported locales.
-func WithLocales(matcher language.Matcher) Option {
+// WithLocales sets the supported language tags.
+func WithLocales(tags []language.Tag) Option {
 	return func(h *Handler) {
-		h.locales = matcher
+		h.locales = newLocaleMatcher(tags)
 	}
 }
 

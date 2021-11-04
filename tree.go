@@ -81,10 +81,9 @@ func (t *tree) Build(name string, params Params) (string, error) {
 		case '*':
 			key := string(b)
 			v, ok := params[key]
-			if !ok {
-				return "", ErrBuild
+			if ok {
+				buf.WriteString(v)
 			}
-			buf.WriteString(v)
 			pattern = pattern[1:]
 		default:
 			var i int

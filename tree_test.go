@@ -73,6 +73,19 @@ func TestTreeBuild(t *testing.T) {
 	}
 }
 
+func TestTreeBuildNilWildcard(t *testing.T) {
+	tree := &tree{}
+	r := NewRoute("/*", nil, WithName("index"))
+	err := tree.Add(r)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, err = tree.Build("index", nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestTreeMatch(t *testing.T) {
 	var tests = []struct {
 		pattern string

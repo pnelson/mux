@@ -133,6 +133,7 @@ func (h *Handler) Abort(w http.ResponseWriter, req *http.Request, err error) {
 	err = h.Encode(w, req, view, code)
 	if err != nil {
 		h.log(req, err)
+		abort(w, http.StatusInternalServerError)
 	}
 }
 

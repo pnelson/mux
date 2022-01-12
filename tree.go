@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-// any represents the empty method set.
-const any = "ANY"
+// empty represents the empty method set.
+const empty = "EMPTY"
 
 // tree is the default router implementation.
 // tree also implements the Builder and Walker interfaces.
@@ -32,7 +32,7 @@ func (t *tree) Add(r *Route) error {
 	}
 	methods := r.Methods()
 	if len(methods) == 0 {
-		methods = append(methods, any)
+		methods = append(methods, empty)
 	}
 	if t.methods == nil {
 		t.methods = make(map[string]*node)
@@ -109,7 +109,7 @@ func (t *tree) Match(req *http.Request) (*Route, Params, error) {
 			return route, params, nil
 		}
 	}
-	root, ok = t.methods[any]
+	root, ok = t.methods[empty]
 	if ok {
 		route, params, err := root.match(path)
 		if err == nil {

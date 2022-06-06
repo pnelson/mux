@@ -24,6 +24,7 @@ Use of this package gives you the following:
 - request identifiers for instrumentation
 - locale detection for internationalization
 - export routes to static files
+- request observer hooks
 - health check handler
 
 Individual components of this package are customizable and/or replaceable where

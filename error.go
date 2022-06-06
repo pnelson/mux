@@ -120,6 +120,7 @@ func (h *Handler) Abort(w http.ResponseWriter, req *http.Request, err error) {
 		abort(w, http.StatusNotAcceptable)
 		return
 	}
+	defer h.observer.Abort(req)
 	redirect, ok := err.(ErrRedirect)
 	if ok {
 		http.Redirect(w, req, redirect.URL, redirect.Code)

@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"runtime/debug"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/text/language"
 )
@@ -26,6 +27,7 @@ type Handler struct {
 	resolver   Resolver
 	pool       Pool
 	log        Logger
+	observer   Observer
 }
 
 // Logger represents the ability to log errors.
@@ -68,6 +70,9 @@ func New(opts ...Option) *Handler {
 	}
 	if h.log == nil {
 		h.log = defaultLogger
+	}
+	if h.observer == nil {
+		h.observer = &discardObserver{}
 	}
 	return h
 }
@@ -139,22 +144,16 @@ func (h *Handler) RedirectTo(name string, params Params, query url.Values, code 
 	return h.Redirect(url, code)
 }
 
+// ServeHTTP initializes a new request context and dispatches
+// to the matching route by calling it's prepared handler.
+//
 // ServeHTTP implements the http.Handler interface.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	req = h.init(req)
-	defer h.abort(w, req)
-	h.dispatch(w, req)
-}
-
-// init initializes a new request context.
-func (h *Handler) init(req *http.Request) *http.Request {
+	t := time.Now().UTC()
 	n := atomic.AddUint64(&seq, 1)
 	rc := &requestContext{seq: n, locale: h.locales.match(req)}
-	return setContext(req, rc)
-}
-
-// dispatch finds a matching route and calls its prepared handler.
-func (h *Handler) dispatch(w http.ResponseWriter, req *http.Request) {
+	req = setContext(req, rc)
+	defer h.abort(w, req)
 	r, params, err := h.router.Match(req)
 	if err != nil {
 		merr, ok := err.(ErrMethodNotAllowed)
@@ -166,9 +165,10 @@ func (h *Handler) dispatch(w http.ResponseWriter, req *http.Request) {
 		h.Abort(w, req, err)
 		return
 	}
-	rc := getContext(req)
 	rc.route = r
 	rc.params = params
+	h.observer.Begin(req)
+	defer h.observer.Commit(req, t)
 	r.ServeHTTP(w, req)
 }
 

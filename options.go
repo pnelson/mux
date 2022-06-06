@@ -58,6 +58,13 @@ func WithLogger(logger Logger) Option {
 	}
 }
 
+// WithObserver sets the observer.
+func WithObserver(observer Observer) Option {
+	return func(h *Handler) {
+		h.observer = observer
+	}
+}
+
 // RouteOption represents a functional option for configuration.
 type RouteOption func(*Route)
 

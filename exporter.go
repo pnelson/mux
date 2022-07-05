@@ -1,7 +1,6 @@
 package mux
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -28,5 +27,5 @@ func (e FileSystemExporter) Export(r *Route, b []byte) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, b, 0644)
+	return os.WriteFile(filename, b, 0644)
 }

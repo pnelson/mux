@@ -1,7 +1,7 @@
 package mux
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -30,7 +30,7 @@ func TestRequestID(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer resp.Body.Close()
-	have, err := ioutil.ReadAll(resp.Body)
+	have, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -60,7 +60,7 @@ func TestLocale(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer resp.Body.Close()
-	have, err := ioutil.ReadAll(resp.Body)
+	have, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestLocaleDefault(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer resp.Body.Close()
-	have, err := ioutil.ReadAll(resp.Body)
+	have, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -115,7 +115,7 @@ func TestLocaleDefaultAcceptRegion(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer resp.Body.Close()
-	have, err := ioutil.ReadAll(resp.Body)
+	have, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -140,7 +140,7 @@ func TestMatch(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	defer resp.Body.Close()
-	have, err := ioutil.ReadAll(resp.Body)
+	have, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
